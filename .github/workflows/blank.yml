@@ -1,0 +1,61 @@
+name: Build WebRTC Android
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git python3 curl unzip
+
+      - name: Install depot_tools
+        run: |
+          git clone --depth 1 \
+            https://chromium.googlesource.com/chromium/tools/depot_tools.git \
+            "$HOME/depot_tools"
+
+          echo "$HOME/depot_tools" >> "$GITHUB_PATH"
+
+          export PATH="$HOME/depot_tools:$PATH"
+
+          gclient --version
+          gclient
+
+      - name: Fetch WebRTC
+        run: |
+          export PATH="$HOME/depot_tools:$PATH"
+
+          mkdir -p "$GITHUB_WORKSPACE/webrtc"
+          cd "$GITHUB_WORKSPACE/webrtc"
+
+          fetch --nohooks --no-history webrtc_android
+
+      - name: Sync dependencies
+        run: |
+          export PATH="$HOME/depot_tools:$PATH"
+
+          cd "$GITHUB_WORKSPACE/webrtc"
+
+          gclient sync --no-history
+
+      - name: Build Android AAR
+        run: |
+          export PATH="$HOME/depot_tools:$PATH"
+
+          cd "$GITHUB_WORKSPACE/webrtc/src"
+
+          vpython3 tools_webrtc/android/build_aar.py \
+            --build-dir "$GITHUB_WORKSPACE/webrtc/out_aar" \
+            --output "$GITHUB_WORKSPACE/libwebrtc.aar" \
+            --arch arm64-v8a
+
+      - name: Upload AAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: libwebrtc
+          path: libwebrtc.aar
