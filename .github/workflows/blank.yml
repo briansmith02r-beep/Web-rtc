@@ -24,7 +24,6 @@ jobs:
           export PATH="$HOME/depot_tools:$PATH"
 
           gclient --version
-          gclient
 
       - name: Fetch WebRTC
         run: |
@@ -50,7 +49,7 @@ jobs:
           cd "$GITHUB_WORKSPACE/webrtc/src"
 
           vpython3 tools_webrtc/android/build_aar.py \
-            --build-dir "$GITHUB_WORKSPACE/webrtc/out_aar" \
+            --build-dir "$GITHUB_WORKSPACE/webrtc/src/out_aar" \
             --output "$GITHUB_WORKSPACE/libwebrtc.aar" \
             --arch arm64-v8a
 
